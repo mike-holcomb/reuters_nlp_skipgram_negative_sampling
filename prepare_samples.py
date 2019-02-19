@@ -33,6 +33,7 @@ word_index["<UNUSED>"] = 3
 
 reverse_word_index = dict([(value, key) for (key, value) in word_index.items()])
 
+
 def decode(text):
     return ' '.join([reverse_word_index.get(i, '?') for i in text])
 
@@ -73,7 +74,7 @@ discard_prob = 1. - np.sqrt(t * np.reciprocal(np.where(raw_prob == 0, 1., raw_pr
 # SECTION 3
 # Generate samples
 ct_pairs = [] # Create list of target-context pair tuples
-targets = [] # Create list of target; Set positive := 0, negative := 1
+targets = [] # Create list of target; Set positive := 1, negative := 0
 
 
 def add_example(t, c):
@@ -86,14 +87,14 @@ def add_example(t, c):
     if t == c:
         return
     ct_pairs.append([t, c])
-    targets.append(0)
+    targets.append(1)
 
     noise_words = get_noise_words(K)
     for noise in noise_words:
         if t == noise:
             noise = noise + 1
         ct_pairs.append([t, noise])
-        targets.append(1)
+        targets.append(0)
 
 
 for i in tqdm(range(num_articles)): # num_articles
@@ -122,6 +123,6 @@ targets = np.array(targets)
 #     if (p+1) % 6 == 0:
 #         print()
 
-np.savez("sgns_samples.npz",pairs=pairs, targets=targets)
+np.savez_compressed("sgns_samples.npz",pairs=pairs, targets=targets)
 
 

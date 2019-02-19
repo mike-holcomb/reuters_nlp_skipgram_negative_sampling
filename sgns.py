@@ -9,7 +9,7 @@ batch_size = 2**14
 with np.load("sgns_samples.npz") as data:
     words = data["pairs"][:,0]
     contexts = data["pairs"][:,1]
-    labels = data["targets"].astype(np.int32)
+    labels = data["targets"].astype(np.float32)
 
 num_examples = words.shape[0]
 num_batches = num_examples // batch_size
@@ -37,8 +37,9 @@ embedded_word_ids = tf.nn.embedding_lookup(word_embeddings, u)
 embedded_context_ids = tf.nn.embedding_lookup(context_embeddings, v)
 
 z = tf.reduce_sum(tf.multiply(embedded_word_ids, embedded_context_ids),axis=1)
-z = tf.cast(tf.pow(-1,label),tf.float32) * z
-loss = -(tf.log(tf.sigmoid(z)))
+# z = tf.cast(tf.pow(-1,label),tf.float32) * z
+# loss = -(tf.log(tf.sigmoid(z)))
+loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=label,logits=z)
 optimizer = tf.train.AdamOptimizer(0.01).minimize(loss)
 batch_loss = tf.reduce_mean(loss)
 
@@ -58,5 +59,5 @@ with tf.Session() as sess:
         for i in range(num_batches):
             partial_loss, _ = sess.run([batch_loss, optimizer])
             total_loss += partial_loss / float(num_batches)
-            progbar.update(i, values=[("loss", partial_loss)])
+            progbar.update(i+1, values=[("loss", partial_loss)])
         print(" total_loss: {}".format(total_loss))
