@@ -4,7 +4,7 @@ import tensorflow as tf
 
 vocab_size = 10000
 embedding_size = 100
-batch_size = 2**14
+batch_size = 2**15
 
 with np.load("sgns_samples.npz") as data:
     words = data["pairs"][:,0]
@@ -40,12 +40,12 @@ z = tf.reduce_sum(tf.multiply(embedded_word_ids, embedded_context_ids),axis=1)
 # z = tf.cast(tf.pow(-1,label),tf.float32) * z
 # loss = -(tf.log(tf.sigmoid(z)))
 loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=label,logits=z)
-optimizer = tf.train.AdamOptimizer(0.01).minimize(loss)
+optimizer = tf.train.AdamOptimizer(0.001).minimize(loss)
 batch_loss = tf.reduce_mean(loss)
 
 init = tf.initializers.global_variables()
 
-epochs = 10
+epochs = 30
 
 with tf.Session() as sess:
     sess.run(init)
@@ -53,11 +53,17 @@ with tf.Session() as sess:
                                               contexts_placeholder: contexts,
                                               labels_placeholder: labels})
 
-    for _ in range(epochs):
+    for j in range(epochs):
         total_loss = 0
         progbar = tf.keras.utils.Progbar(num_batches, 20, stateful_metrics="loss")
         for i in range(num_batches):
             partial_loss, _ = sess.run([batch_loss, optimizer])
             total_loss += partial_loss / float(num_batches)
             progbar.update(i+1, values=[("loss", partial_loss)])
-        print(" total_loss: {}".format(total_loss))
+        print("{}: total_loss: {}".format(j+1, total_loss))
+
+    word_weights, context_weights = sess.run([word_embeddings, context_embeddings])
+
+np.savetxt("word_weights.csv", word_weights, delimiter=",")
+np.savetxt("context_weights.csv", context_weights, delimiter=",")
+
