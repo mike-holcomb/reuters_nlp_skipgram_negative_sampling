@@ -2,8 +2,6 @@
 Wrap the sgns graph from sgns.py into a tf.Estimator
 Adapted from: https://github.com/tensorflow/models/blob/master/samples/cookbook/regression/custom_regression.py
 """
-import parser
-
 import numpy as np
 import tensorflow as tf
 import argparse
@@ -24,43 +22,10 @@ def sgns_fn(features, labels, mode, params):
     Model function implementing Skip Gram with Negative Sampling
     """
 
-    # u = tf.get_variable("words_embedding_input",(None, params['embedding_size']))
-    # v = tf.get_variable("contexts_embedding_input",(None, params['embedding_size']))
-
-    e_sz = params['embedding_size']
-    v_sz = params['vocab_size']
-
-    # u = tf.placeholder(tf.int64,(None,))
-    # v = tf.placeholder(tf.int64,(None,))
-
-    #
-    # uv_mapping = { params['feature_columns'][0]:u,
-    #                params['feature_columns'][1]:v
-    #                }
-
     u = tf.feature_column.input_layer(features,[params['feature_columns'][0] ])
     v = tf.feature_column.input_layer(features, [params['feature_columns'][1] ])
-    # u = features["words"]
-    # v = features["contexts"]
 
     z = tf.reduce_sum(tf.multiply(u, v), axis=1)
-
-    # word_embeddings = tf.get_variable("word_embeddings",
-    #                                   [v_sz, e_sz])
-    #
-    # context_embeddings = tf.get_variable("context_embeddings",
-    #                                      [v_sz, e_sz])
-    #
-    # u_embed = tf.nn.embedding_lookup(word_embeddings, u)
-    # v_embed = tf.nn.embedding_lookup(context_embeddings, v)
-
-
-    # ones_ =tf.ones((2, params['embedding_size']))
-    #
-    # x = tf.feature_column.input_layer(features, params['feature_columns'])
-    # z = tf.reduce_sum(tf.matmul(x,ones_),axis=1)
-
-    # z = tf.reduce_sum(tf.multiply(u_embed, v_embed), axis=1)
 
     predictions = tf.sigmoid(z)
     # z = tf.cast(tf.pow(-1,label),tf.float32) * z
